@@ -178,7 +178,9 @@ If the ODBC driver is unreliable:
 | Postings by title bucket (donut) | postings | title_bucket, COUNT(posting_id) |
 | Top companies hiring (bar) | postings | company, COUNT(posting_id) |
 
-> **Dashboard screenshot**: *(to be added after Power BI visuals are built — requires credentials and a live run first)*
+> **Dashboard screenshot**:
+>
+> ![Power BI Dashboard](dashboard.png)
 
 ---
 
@@ -307,9 +309,9 @@ adzuna-job-intelligence/
 - [x] `logs/run_log.csv`: tracks `actual_api_calls` every run for quota visibility
 - [x] Raw JSON uploaded to GitHub Actions artifacts (source fidelity on ephemeral runners)
 - [x] Dedupe verification rows (fill in after first real run)
-- [ ] Power BI dashboard — 4 visuals
-- [ ] Dashboard screenshot
-- [ ] Public GitHub repo URL
+- [x] Power BI dashboard — 4 visuals
+- [x] Dashboard screenshot
+- [x] Public GitHub repo URL (https://github.com/dummycodertech/adzuna-job-intelligence)
 
 ---
 
