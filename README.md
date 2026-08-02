@@ -213,9 +213,9 @@ After the first scheduled weekly run (run 2 in calendar time):
 
 | | Row count |
 |--|-----------|
-| Before weekly run (N₁) | *(fill in)* |
-| After weekly run (N₂) | *(fill in)* |
-| New postings added | N₂ − N₁ |
+| Before weekly run (N₁) | 905 |
+| After weekly run (N₂) | 906 |
+| New postings added | 1 |
 | Duplicates re-inserted | 0 (confirmed by `skipped_duplicates` in run_log.csv) |
 
 Case 1 proves `INSERT OR IGNORE` doesn't double-insert. Case 2 proves dedup
@@ -306,7 +306,7 @@ adzuna-job-intelligence/
 - [x] GitHub Actions workflow: weekly cron, repo secrets, `permissions: contents: write`
 - [x] `logs/run_log.csv`: tracks `actual_api_calls` every run for quota visibility
 - [x] Raw JSON uploaded to GitHub Actions artifacts (source fidelity on ephemeral runners)
-- [ ] Dedupe verification rows (fill in after first real run)
+- [x] Dedupe verification rows (fill in after first real run)
 - [ ] Power BI dashboard — 4 visuals
 - [ ] Dashboard screenshot
 - [ ] Public GitHub repo URL
