@@ -1,16 +1,16 @@
-# Adzuna Job Market Intelligence Tool
+# 📈 Adzuna Job Market Intelligence — Weekly Analyst Job Pipeline
 
-A live, scheduled data pipeline tracking skill demand and salary trends for
-analyst-track roles across five Indian cities, built on the Adzuna Jobs API.
+*A scheduled data pipeline that tracks skill demand and salary trends for analyst-track roles across five Indian cities, with automated weekly ingestion via GitHub Actions.*
 
-**Companion project** to the [CFPB dbt/DuckDB pipeline](../cfpb_complaints/README.md) —
-different domain (recruitment, not consumer finance), different engine
-(SQLite, not DuckDB), different ingestion pattern (scheduled REST API, not
-bulk file load).
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![SQLite](https://img.shields.io/badge/Storage-SQLite-lightgrey)
+![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF)
+![Power BI](https://img.shields.io/badge/Viz-Power%20BI-F2C811)
+![Schedule](https://img.shields.io/badge/Schedule-Weekly%20Monday%2002%3A00%20UTC-green)
 
 ---
 
-## Problem Statement
+## 🎯 Overview
 
 Which tools and skills appear most in Indian data/business analyst job postings?
 How do salaries vary by city and role? Which companies are hiring most?
@@ -20,9 +20,27 @@ a one-time snapshot. The dataset grows automatically each week via GitHub Action
 so trend claims are grounded in actual run history — not extrapolated from a
 single pull.
 
+### 📊 Key Numbers
+
+| Metric | Value | Context |
+|--------|-------|---------|
+| Title buckets | 2 | `"data analyst"`, `"business analyst"` |
+| Cities | 5 | Delhi, Bangalore, Mumbai, Hyderabad, Pune |
+| Results per page | 50 | API maximum |
+| Base API calls / run | 10 | 2 titles × 5 cities |
+| Max API calls / run | 20 | Hard cap: 1 extra page per combination |
+| Run frequency | Weekly | Monday 02:00 UTC via cron |
+| Estimated runs / month | ~4.3 | Based on weekly schedule |
+| Estimated calls / month | ~43–86 | Well under free-tier ceiling |
+| Free-tier budget | ~1,000 / month | Adzuna API |
+| Skills dictionary | 30 terms | Regex patterns in `config/skills.yml` |
+| Postings ingested (run 1) | 905 | Unique job IDs in `data/jobs.db` |
+| Postings ingested (run 2) | 906 | 1 genuinely new posting added |
+| Duplicate re-inserts | 0 | Confirmed by `skipped_duplicates` in run log |
+
 ---
 
-## Architecture — Four Stages
+## 🏗️ Architecture — Four Stages
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -59,36 +77,22 @@ single pull.
 └─────────────────────────────────────────────────────────────┘
 ```
 
----
+**Why SQLite over DuckDB?**
+- This project's ingestion pattern is a scheduled REST API pull, not a bulk file load — SQLite's row-level `INSERT OR IGNORE` is a better fit than DuckDB's columnar bulk-load model.
+- `data/jobs.db` is committed to the repo so Power BI can connect to a local file path and the dataset visibly grows each week in git history.
 
-## Query Plan & Quota Math
+**Why a fixed query plan?**
+- The free tier allows roughly 1,000 calls/month. Ten base calls per run × 4.3 runs/month = 43 calls — well under 5% of the budget even at the 20-call ceiling.
+- The city and title list are deliberately fixed; adding combinations requires re-checking this math first.
 
-| Parameter | Value |
-|-----------|-------|
-| Title buckets | `"data analyst"`, `"business analyst"` |
-| Cities | Delhi, Bangalore, Mumbai, Hyderabad, Pune |
-| Results per page | 50 (API maximum) |
-| Base calls per run | 10 (2 × 5) |
-| Max calls per run | 20 (hard cap: 1 extra page per combination) |
-| Run frequency | Weekly (Monday 02:00 UTC) |
-| Estimated runs/month | ~4.3 |
-| Estimated calls/month | ~43–86 |
-| Free-tier budget | ~1,000/month |
-
-**Why this sizing?** The free tier allows roughly 1,000 calls/month. Ten base
-calls per run × 4.3 runs/month = 43 calls — well under 5% of the budget even
-at the 20-call ceiling. The city and title list are deliberately fixed; adding
-combinations requires re-checking this math first.
-
-**Pagination hard cap:** If any combination returns more than 50 results, the
-script fetches page 2 (1 extra call) and stops there. It logs a warning if the
-API reports more than 100 total results, but does not fetch page 3+. The
-`actual_api_calls` column in `logs/run_log.csv` makes quota consumption visible
-after every run.
+**Why a hard pagination cap?**
+- If any combination returns more than 50 results, the script fetches page 2 (1 extra call) and stops there.
+- It logs a warning if the API reports more than 100 total results, but does not fetch page 3+.
+- The `actual_api_calls` column in `logs/run_log.csv` makes quota consumption visible after every run.
 
 ---
 
-## Setup Instructions
+## ⚙️ Setup
 
 ### 1. Get Adzuna API Credentials
 
@@ -100,7 +104,7 @@ after every run.
 
 ```powershell
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/adzuna-job-intelligence.git
+git clone https://github.com/dummycodertech/adzuna-job-intelligence.git
 cd adzuna-job-intelligence
 
 # Run the setup script (creates venv, installs deps, copies .env)
@@ -152,7 +156,7 @@ Run this before your first live pull to confirm everything is wired correctly.
 
 ---
 
-## Power BI Setup
+## 📺 Power BI Dashboard
 
 ### Option A — Direct SQLite connection (preferred)
 
@@ -169,7 +173,7 @@ If the ODBC driver is unreliable:
 3. Load `data/exports/skill_counts.csv` (pre-aggregated skill frequencies)
 4. Refresh by re-running `scripts/export_csv.py` and reloading in Power BI
 
-### Suggested Visuals
+### Visuals
 
 | Visual | Table | Fields |
 |--------|-------|--------|
@@ -178,18 +182,20 @@ If the ODBC driver is unreliable:
 | Postings by title bucket (donut) | postings | title_bucket, COUNT(posting_id) |
 | Top companies hiring (bar) | postings | company, COUNT(posting_id) |
 
-> **Dashboard screenshot**:
->
-> ![Power BI Dashboard](dashboard.png)
+![Power BI Dashboard](dashboard.png)
 
 ---
 
-## Dedupe Verification
+## 🔍 Deduplication Verification
+
+**Why `INSERT OR IGNORE` on Adzuna's own job ID?**
+- Adzuna's job ID is a stable primary key assigned by the source — using it means the dedup key is never fabricated or inferred.
+- `INSERT OR IGNORE` is a single atomic operation; there's no separate "check then insert" window where a race condition could double-insert.
+- The `skipped_duplicates` counter in `logs/run_log.csv` provides an auditable count of ignored rows after every run.
 
 ### Case 1 — Full overlap (day-one baseline)
 
-The pipeline uses `INSERT OR IGNORE` with Adzuna's own job ID as the primary
-key. To verify this is working:
+Two back-to-back runs against the same data window: row count must not grow.
 
 ```powershell
 # Run 1 — first ingest
@@ -201,24 +207,22 @@ key. To verify this is working:
 # Row count must still be N₁, not 2×N₁
 ```
 
-**Results (populate after running):**
-
 | | Row count |
 |--|-----------|
-| After run 1 (N₁) | 905 |
-| After run 2 (should = N₁) | 905 |
-| New inserts in run 2 | 0 |
+| After run 1 (N₁) | **905** |
+| After run 2 (should = N₁) | **905** |
+| New inserts in run 2 | **0** |
 
 ### Case 2 — Partial overlap (production-realistic)
 
-After the first scheduled weekly run (run 2 in calendar time):
+The first automated weekly run: some postings repeat, some are genuinely new.
 
 | | Row count |
 |--|-----------|
-| Before weekly run (N₁) | 905 |
-| After weekly run (N₂) | 906 |
-| New postings added | 1 |
-| Duplicates re-inserted | 0 (confirmed by `skipped_duplicates` in run_log.csv) |
+| Before weekly run (N₁) | **905** |
+| After weekly run (N₂) | **906** |
+| New postings added | **1** |
+| Duplicates re-inserted | **0** (confirmed by `skipped_duplicates` in run_log.csv) |
 
 Case 1 proves `INSERT OR IGNORE` doesn't double-insert. Case 2 proves dedup
 works under the actual production condition — partial overlap, where some
@@ -227,7 +231,7 @@ happens every week.
 
 ---
 
-## Data Limitations & Honest Notes
+## ⚠️ Known Limitations & Honest Notes
 
 ### Skill frequency counts — snippet truncation
 
@@ -261,7 +265,7 @@ accumulated. This note will be updated as runs complete.
 
 ---
 
-## File Structure
+## 📁 File Structure
 
 ```
 adzuna-job-intelligence/
@@ -296,24 +300,3 @@ adzuna-job-intelligence/
     └── workflows/
         └── weekly_ingest.yml ← Monday 02:00 UTC cron + manual dispatch
 ```
-
----
-
-## Deliverables Checklist
-
-- [x] `.env.example` committed, `.env` gitignored, no credentials in repo
-- [x] Ingestion script: fixed 10-combination query plan, hard pagination cap
-- [x] SQLite schema with dedupe-safe `INSERT OR IGNORE` inserts
-- [x] `config/skills.yml`: 30-term skill dictionary, separate from code
-- [x] GitHub Actions workflow: weekly cron, repo secrets, `permissions: contents: write`
-- [x] `logs/run_log.csv`: tracks `actual_api_calls` every run for quota visibility
-- [x] Raw JSON uploaded to GitHub Actions artifacts (source fidelity on ephemeral runners)
-- [x] Dedupe verification rows (fill in after first real run)
-- [x] Power BI dashboard — 4 visuals
-- [x] Dashboard screenshot
-- [x] Public GitHub repo URL (https://github.com/dummycodertech/adzuna-job-intelligence)
-
----
-
-*Built as an "applied analyst" portfolio project alongside the CFPB dbt/DuckDB pipeline.
-Different domain, different engine, different ingestion pattern — deliberately.*
