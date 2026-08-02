@@ -1,3 +1,4 @@
 run_timestamp,combinations_queried,postings_fetched,new_inserts,skipped_duplicates,malformed_skipped,actual_api_calls,pagination_warnings
 2026-08-02T07:31:03.108188+00:00,10,925,0,925,0,19,8
 2026-08-02T07:31:55.872243+00:00,10,925,0,925,0,19,8
+2026-08-02T08:03:15.088698+00:00,10,925,1,924,0,19,8
