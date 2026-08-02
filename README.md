@@ -255,13 +255,14 @@ CSVs in `data/exports/`.
 
 ### Data maturity — no trend claims before ≥4 runs
 
-A "trend over time" requires at least two data points. As of first run, there
-is **one weekly run**, meaning the skill frequency chart shows current demand,
-not a trend. The pipeline infrastructure for weekly growth is in place, but
-trend language in presentations should wait until multiple runs have
-accumulated. This note will be updated as runs complete.
+A "trend over time" requires at least two data points. **Three runs have
+completed** as of this commit (see `logs/run_log.csv`), meaning the skill
+frequency chart reflects current demand across those pulls — but is not yet
+a trend line. The pipeline infrastructure for weekly growth is in place;
+trend language in presentations should wait until at least four runs have
+accumulated so that week-over-week movement is visible.
 
-**Runs completed as of last commit:** *(fill in)*
+**Runs completed as of last commit:** 3
 
 ---
 
