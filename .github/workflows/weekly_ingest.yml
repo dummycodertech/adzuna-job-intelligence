@@ -1,0 +1,102 @@
+name: Weekly Job Data Ingestion
+
+on:
+  schedule:
+    # Every Monday at 02:00 UTC
+    - cron: '0 2 * * 1'
+  # Manual trigger — use this to test without waiting a week.
+  # Go to Actions → Weekly Job Data Ingestion → Run workflow.
+  workflow_dispatch:
+
+# REQUIRED: allows the workflow to commit and push the updated DB back to the repo.
+# Without this, the ingest/validate steps show green but the push silently fails.
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Check out the repo (with full history so git push works correctly)
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for push to work on the default branch
+
+      # -----------------------------------------------------------------------
+      # 2. Set up Python
+      # -----------------------------------------------------------------------
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # -----------------------------------------------------------------------
+      # 3. Install dependencies
+      # -----------------------------------------------------------------------
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # -----------------------------------------------------------------------
+      # 4. Run ingestion script
+      #    Credentials come from repo secrets — NEVER hardcoded here.
+      #    Add secrets: Settings → Secrets and variables → Actions
+      #      ADZUNA_APP_ID  = your app_id from developer.adzuna.com
+      #      ADZUNA_APP_KEY = your app_key from developer.adzuna.com
+      # -----------------------------------------------------------------------
+      - name: Run ingestion
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+        run: python scripts/ingest.py
+
+      # -----------------------------------------------------------------------
+      # 5. Run data quality validation
+      #    Exits non-zero if duplicate posting_ids or salary violations found.
+      # -----------------------------------------------------------------------
+      - name: Run validation checks
+        run: python scripts/validate.py
+
+      # -----------------------------------------------------------------------
+      # 6. Export flat CSVs for Power BI
+      # -----------------------------------------------------------------------
+      - name: Export CSVs for Power BI
+        run: python scripts/export_csv.py
+
+      # -----------------------------------------------------------------------
+      # 7. Upload raw JSON as a GitHub artifact (retained 90 days)
+      #    This preserves source fidelity on ephemeral CI runners.
+      #    If a skill-extraction regex bug is found later, raw data exists
+      #    to reprocess — same principle as the CFPB project's raw layer.
+      # -----------------------------------------------------------------------
+      - name: Upload raw JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-json-${{ github.run_id }}
+          path: data/raw/
+          retention-days: 90
+          if-no-files-found: warn  # Don't fail if no raw files (e.g. all calls errored)
+
+      # -----------------------------------------------------------------------
+      # 8. Commit and push updated database, exports, and logs back to repo.
+      #    NOTE: Both git config lines are REQUIRED before git commit.
+      #    Without user.name and user.email, git commit errors with
+      #    "Author identity unknown" and the data file silently never updates.
+      # -----------------------------------------------------------------------
+      - name: Commit and push updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/jobs.db data/exports/ logs/
+          # Only commit if there are actual changes (first run of a week may have 0 new rows)
+          if git diff --staged --quiet; then
+            echo "No changes to commit — all postings were duplicates of existing rows."
+          else
+            git commit -m "chore: weekly ingest run $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+          fi

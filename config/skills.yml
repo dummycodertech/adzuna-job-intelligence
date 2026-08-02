@@ -1,0 +1,101 @@
+# Skill Dictionary — Adzuna Job Intelligence Pipeline
+# =====================================================
+# Each entry has:
+#   name:    canonical display name (used in DB and Power BI)
+#   pattern: Python regex pattern (compiled with re.IGNORECASE)
+#
+# Patterns use \b word boundaries and handle common spacing/abbreviation
+# variants. Keep under ~30 terms to stay analyst-scoped; no ML classifiers.
+# To add a skill: append an entry here — no code changes needed.
+
+skills:
+  - name: SQL
+    pattern: '\bSQL\b'
+
+  - name: Python
+    pattern: '\bPython\b'
+
+  - name: Power BI
+    pattern: '\bPower\s*BI\b'
+
+  - name: Tableau
+    pattern: '\bTableau\b'
+
+  - name: Excel
+    pattern: '\b(?:MS\s*)?Excel\b|\bMicrosoft\s*Excel\b'
+
+  - name: R
+    # Narrow pattern to avoid false matches on 'R&D', 'HR', etc.
+    pattern: '\bR\b(?=\s+(?:programming|language|studio|package|script)|\s*,|\s*and\b)'
+
+  - name: AWS
+    pattern: '\bAWS\b|\bAmazon\s*Web\s*Services\b'
+
+  - name: Azure
+    pattern: '\bAzure\b|\bMicrosoft\s*Azure\b'
+
+  - name: GCP
+    pattern: '\bGCP\b|\bGoogle\s*Cloud\b'
+
+  - name: Spark
+    pattern: '\bApache\s*Spark\b|\bSpark\b'
+
+  - name: dbt
+    pattern: '\bdbt\b|\bData\s*Build\s*Tool\b'
+
+  - name: Looker
+    pattern: '\bLooker\b'
+
+  - name: Airflow
+    pattern: '\bApache\s*Airflow\b|\bAirflow\b'
+
+  - name: Pandas
+    pattern: '\bPandas\b'
+
+  - name: NumPy
+    pattern: '\bNumPy\b|\bNumpy\b'
+
+  - name: Scikit-learn
+    pattern: '\bscikit[\-\s]learn\b|\bsklearn\b'
+
+  - name: TensorFlow
+    pattern: '\bTensorFlow\b|\bTensorflow\b'
+
+  - name: Hadoop
+    pattern: '\bHadoop\b'
+
+  - name: Kafka
+    pattern: '\bApache\s*Kafka\b|\bKafka\b'
+
+  - name: BigQuery
+    pattern: '\bBigQuery\b|\bBig\s*Query\b'
+
+  - name: Redshift
+    pattern: '\bRedshift\b|\bAmazon\s*Redshift\b'
+
+  - name: Snowflake
+    pattern: '\bSnowflake\b'
+
+  - name: Git
+    pattern: '\bGit\b(?!Hub|Lab)'
+
+  - name: GitHub
+    pattern: '\bGitHub\b'
+
+  - name: Linux
+    pattern: '\bLinux\b|\bUnix\b'
+
+  - name: Statistics
+    pattern: '\bStatistics\b|\bStatistical\s*Analysis\b'
+
+  - name: Machine Learning
+    pattern: '\bMachine\s*Learning\b|\bML\b'
+
+  - name: ETL
+    pattern: '\bETL\b|\bExtract[\s,]+Transform[\s,]+Load\b'
+
+  - name: SAP
+    pattern: '\bSAP\b'
+
+  - name: VBA
+    pattern: '\bVBA\b|\bVisual\s*Basic\s*for\s*Applications\b'

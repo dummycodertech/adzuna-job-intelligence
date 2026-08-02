@@ -1,0 +1,45 @@
+# --- Credentials (NEVER commit) ---
+.env
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Raw JSON dumps (large, ephemeral; uploaded via actions/upload-artifact) ---
+data/raw/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs (committed selectively) ---
+# run_log.csv and validation_log.txt ARE tracked (they grow incrementally)
+# Temp logs are not
+*.tmp
+
+# NOTE: data/jobs.db IS intentionally tracked.
+# It grows incrementally each weekly run and enables Power BI live connection.
+# Tradeoff acknowledged: binary diffs bloat history. Acceptable at portfolio scale.
+# Production alternative: git-lfs or reconstruct from exported CSVs.
