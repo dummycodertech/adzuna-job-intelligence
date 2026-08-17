@@ -1,23 +1,23 @@
 skill,posting_count,data_analyst_count,business_analyst_count
-SQL,117,93,24
-Python,62,54,8
-Excel,52,38,14
-Power BI,48,41,7
-Tableau,42,38,4
-ETL,33,33,0
-Machine Learning,24,20,4
-SAP,23,6,17
+SQL,124,99,25
+Python,65,57,8
+Excel,54,40,14
+Power BI,54,46,8
+Tableau,45,41,4
+ETL,36,36,0
+Machine Learning,26,21,5
+SAP,26,7,19
 Snowflake,19,18,1
 Azure,17,13,4
 Statistics,16,13,3
-AWS,11,10,1
-Spark,11,11,0
+AWS,13,11,2
+Spark,12,12,0
 R,9,8,1
-BigQuery,7,6,1
-Looker,7,7,0
-dbt,7,7,0
-Airflow,6,6,0
-GCP,6,6,0
+BigQuery,8,7,1
+Looker,8,8,0
+dbt,8,8,0
+Airflow,7,7,0
+GCP,7,7,0
 Hadoop,5,5,0
 Pandas,5,5,0
 VBA,5,5,0
