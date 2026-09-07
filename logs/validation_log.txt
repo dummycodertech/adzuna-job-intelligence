@@ -93,3 +93,14 @@ Validation run: 2026-08-31T08:07:06.896167+00:00
   [INFO] Table counts — postings: 1583, posting_skills rows: 703, distinct skills: 29
   Result: ALL CHECKS PASSED
 
+
+============================================================
+Validation run: 2026-09-07T07:00:30.570399+00:00
+============================================================
+  [PASS] No duplicate posting_ids
+  [PASS] No salary_min > salary_max violations
+  [WARN] Malformed/skipped records in latest run: 9
+  [INFO] Latest run: 2 actual API calls, 1 pagination cap warnings
+  [INFO] Table counts — postings: 1610, posting_skills rows: 716, distinct skills: 29
+  Result: ALL CHECKS PASSED
+
