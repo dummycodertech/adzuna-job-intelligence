@@ -133,20 +133,20 @@ The system runs autonomously via **GitHub Actions** on a weekly cron schedule. I
 
 ```mermaid
 flowchart TD
-    subgraph Trigger ["Automation & Scheduling"]
-        CRON["GitHub Actions Cron<br/>(Every Monday 02:00 UTC)"]
-        MANUAL["workflow_dispatch<br/>(Manual Trigger)"]
+    subgraph Trigger ["Automation and Scheduling"]
+        CRON["GitHub Actions Cron<br/>Every Monday 02:00 UTC"]
+        MANUAL["workflow_dispatch<br/>Manual Trigger"]
     end
 
     subgraph Runner ["GitHub Actions Virtual Environment (Ubuntu-latest)"]
-        SETUP["actions/setup-python@v5<br/>Python 3.11 + Cache"]
+        SETUP["actions/setup-python@v5<br/>Python 3.11 with Cache"]
         INGEST["scripts/ingest.py<br/>ETL Ingestion Controller"]
         VALIDATE["scripts/validate.py<br/>Data Integrity Validator"]
         EXPORT["scripts/export_csv.py<br/>Flat CSV Generator"]
     end
 
     subgraph External ["External Services"]
-        ADZUNA["Adzuna Jobs Search API<br/>https://api.adzuna.com/v1/api/jobs/in/search/"]
+        ADZUNA["Adzuna Jobs Search API<br/>api.adzuna.com"]
         SECRETS["GitHub Repo Secrets<br/>ADZUNA_APP_ID / KEY"]
     end
 
@@ -157,7 +157,7 @@ flowchart TD
         RAW["Raw Audit Payloads<br/>data/raw/*.json (90-day Artifact)"]
     end
 
-    subgraph Analytics ["Analytics & Presentation"]
+    subgraph Analytics ["Analytics and Presentation"]
         PBI["Power BI Desktop Dashboard"]
     end
 
@@ -165,19 +165,20 @@ flowchart TD
     MANUAL --> SETUP
     SETUP --> INGEST
     SECRETS -.-> INGEST
-    INGEST <-->|GET /jobs/in/search/ (Max 20 calls)| ADZUNA
-    INGEST -->|Persist JSON| RAW
-    INGEST -->|INSERT OR IGNORE| DB
-    INGEST -->|Append Telemetry| RUNLOG
+    INGEST -->|"GET /jobs/in/search/ (Max 20 calls)"| ADZUNA
+    ADZUNA -->|"JSON Listing Payloads"| INGEST
+    INGEST -->|"Save JSON"| RAW
+    INGEST -->|"INSERT OR IGNORE"| DB
+    INGEST -->|"Append Telemetry"| RUNLOG
     INGEST --> VALIDATE
-    VALIDATE -->|Assert PK & Range Rules| DB
-    VALIDATE -->|Log Results| RUNLOG
+    VALIDATE -->|"Assert PK and Range Rules"| DB
+    VALIDATE -->|"Log Results"| RUNLOG
     VALIDATE --> EXPORT
-    EXPORT -->|Extract Aggregations| DB
-    EXPORT -->|Write Flat Files| FLAT
+    EXPORT -->|"Extract Aggregations"| DB
+    EXPORT -->|"Write Flat Files"| FLAT
     
-    DB -.->|Direct SQLite ODBC| PBI
-    FLAT -.->|File Fallback Connector| PBI
+    DB -.->|"Direct SQLite ODBC"| PBI
+    FLAT -.->|"File Fallback Connector"| PBI
 ```
 
 ### Data Pipeline Flow
@@ -195,10 +196,10 @@ sequenceDiagram
     participant Git as GitHub Repo
 
     Cron->>Runner: Trigger scheduled run (Monday 02:00 UTC)
-    Runner->>Runner: Load credentials & compile config/skills.yml
-    loop 2 Titles × 5 Cities (10 Combinations)
+    Runner->>Runner: Load credentials and compile config/skills.yml
+    loop 10 Combinations (2 Titles x 5 Cities)
         Runner->>API: GET Page 1 (what=title, where=city, results=50)
-        API-->>Runner: Return Page 1 JSON (count, results[])
+        API-->>Runner: Return Page 1 JSON (count, results)
         alt count > 50
             Runner->>API: GET Page 2 (results=50)
             API-->>Runner: Return Page 2 JSON
@@ -206,8 +207,8 @@ sequenceDiagram
         alt count > 100
             Runner->>Runner: Emit pagination cap warning (drop further pages)
         end
-        Runner->>SQLite: Parse fields & INSERT OR IGNORE INTO postings
-        Runner->>SQLite: Regex match text & INSERT OR IGNORE INTO posting_skills
+        Runner->>SQLite: Parse fields and INSERT OR IGNORE INTO postings
+        Runner->>SQLite: Regex match text and INSERT OR IGNORE INTO posting_skills
     end
     Runner->>Runner: Save data/raw/run_YYYYMMDD_HHMMSS.json
     Runner->>Runner: Append metrics to logs/run_log.csv
@@ -243,17 +244,17 @@ erDiagram
         TEXT title "Job posting title"
         TEXT company "Employer display name"
         TEXT location "Location display name"
-        REAL salary_min "Minimum advertised salary (INR)"
-        REAL salary_max "Maximum advertised salary (INR)"
-        TEXT currency "Currency code (default 'INR')"
+        REAL salary_min "Minimum advertised salary INR"
+        REAL salary_max "Maximum advertised salary INR"
+        TEXT currency "Currency code default INR"
         TEXT category "Adzuna job category"
-        TEXT contract_type "Permanent, contract, etc."
+        TEXT contract_type "Permanent or contract"
         TEXT created_date "ISO-8601 posting date"
         TEXT pulled_at "ISO-8601 ingestion timestamp"
         TEXT description "Truncated API description snippet"
         TEXT redirect_url "Adzuna redirect application URL"
-        TEXT title_bucket "Query title ('data analyst' | 'business analyst')"
-        TEXT city_query "Query city (Delhi | Bangalore | Mumbai | Hyderabad | Pune)"
+        TEXT title_bucket "Query title: data analyst or business analyst"
+        TEXT city_query "Query city: Delhi, Bangalore, Mumbai, Hyderabad, Pune"
     }
     posting_skills {
         TEXT posting_id FK "References postings.posting_id"
@@ -732,16 +733,16 @@ Operational metrics measured across 13 production cycles:
 ```mermaid
 gantt
     title Engineering Roadmap
-    dateFormat  YYYY-MM
+    dateFormat  YYYY-MM-DD
     section Near-Term
-    Automated pytest test suite with mocking :active, 2026-10, 2026-11
-    Dynamic CI badge generation              :2026-10, 2026-11
+    Automated pytest test suite with mocking :active, 2026-10-01, 2026-11-01
+    Dynamic CI badge generation              :2026-10-15, 2026-11-15
     section Mid-Term
-    Taxonomy expansion (dbt, Airflow, LLMs)  :2026-11, 2026-12
-    Git LFS / Parquet storage migration      :2026-11, 2026-12
+    Taxonomy expansion (dbt, Airflow, LLMs)  :2026-11-01, 2026-12-15
+    Git LFS / Parquet storage migration      :2026-11-15, 2026-12-31
     section Long-Term
-    Serverless Streamlit / Evidence dashboard:2027-01, 2027-02
-    Salary estimation regression model       :2027-02, 2027-03
+    Serverless Streamlit / Evidence dashboard:2027-01-01, 2027-02-15
+    Salary estimation regression model       :2027-02-01, 2027-03-31
 ```
 
 - **Near-Term (Engineering Quality)**:
